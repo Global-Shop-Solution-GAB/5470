@@ -1,0 +1,197 @@
+Program.Sub.ScreenSU.Start
+Gui.F_ARItemNotes..Create
+Gui.F_ARItemNotes..Caption("Customer Notes")
+Gui.F_ARItemNotes..Size(13650,7740)
+Gui.F_ARItemNotes..MinX(0)
+Gui.F_ARItemNotes..MinY(0)
+Gui.F_ARItemNotes..Position(0,0)
+Gui.F_ARItemNotes..BackColor(-2147483633)
+Gui.F_ARItemNotes..MousePointer(0)
+Gui.F_ARItemNotes..Event(UnLoad,Unload)
+Gui.F_ARItemNotes.GsGCNotes.Create(GsGridControl)
+Gui.F_ARItemNotes.GsGCNotes.Size(13110,3165)
+Gui.F_ARItemNotes.GsGCNotes.Position(195,3780)
+Gui.F_ARItemNotes.GsGCNotes.Event(RowClick,RowClick)
+Gui.F_ARItemNotes.txtBox.Create(TextboxM)
+Gui.F_ARItemNotes.txtBox.Size(13110,2625)
+Gui.F_ARItemNotes.txtBox.Position(195,375)
+Gui.F_ARItemNotes.cmdSave.Create(Button)
+Gui.F_ARItemNotes.cmdSave.Size(855,375)
+Gui.F_ARItemNotes.cmdSave.Position(330,3135)
+Gui.F_ARItemNotes.cmdSave.Caption("Save")
+Gui.F_ARItemNotes.cmdSave.Event(Click,Save)
+Gui.F_ARItemNotes.cmdClear.Create(Button)
+Gui.F_ARItemNotes.cmdClear.Size(855,375)
+Gui.F_ARItemNotes.cmdClear.Position(1395,3135)
+Gui.F_ARItemNotes.cmdClear.Caption("Clear")
+Gui.F_ARItemNotes.cmdClear.Event(Click,Clear)
+Gui.F_ARItemNotes.txtRow.Create(TextBox,"",False,1215,300,0,12030,3210,True,0,"Arial",8,-2147483643,1)
+Gui.F_ARItemNotes.dtpEntry.Create(DatePicker)
+Gui.F_ARItemNotes.dtpEntry.Visible(False)
+Gui.F_ARItemNotes.dtpEntry.Size(1935,285)
+Gui.F_ARItemNotes.dtpEntry.Position(9855,3165)
+Gui.F_ARItemNotes.lbl1.Create(Label,"Notes",True,1935,255,0,210,165,True,0,"Arial",8,-2147483633,0)
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+'This project was created for *Controlled Fluids* who attempted to add to many characters to the notes on the AR Item History.
+'We will have this running off the Script 1 button. The Menu path is Accounts Receivalbe > View > AR Open Items and History. After the user selects a customer, in the header screen, tehy will have the option to view notes from teh Script 1 button.
+'This will mimic the customer notes section on the CRM
+
+F.Intrinsic.Control.Try
+V.Local.sError.Declare(String, "")
+
+F.Intrinsic.Control.SelectCase(V.Caller.Hook)
+F.Intrinsic.Control.Case(46310)
+	'Set the text on the script 1 button
+	V.Passed.000006.Set("Customer Notes")
+	
+F.Intrinsic.Control.Case(46320)
+	'Script 1 button
+	F.Intrinsic.Control.CallSub(ScreenPrep)
+	Gui.F_ARItemNotes..Show
+	
+F.Intrinsic.Control.CaseElse
+	F.Intrinsic.Control.End
+	
+F.Intrinsic.Control.EndSelect
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Concat("Project: GCG_5470_ARCustomerNotes.g2u", V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.CallSub(Unload)
+F.Intrinsic.Control.Endtry
+Program.Sub.Main.End
+
+Program.Sub.Save.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare(String, "")
+
+F.Intrinsic.Control.If(V.Screen.F_ARItemNotes!txtBox.Text.Trim, <>, "")
+	F.Intrinsic.Control.If(V.Screen.F_ARItemNotes!txtRow.Text.Trim, =, "NEW")
+		'We add a new entry
+		F.Data.DataTable.AddRow("dtNotes", "AddDate", V.Ambient.Date, "UserNo", V.Caller.User, "CustNo", V.Passed.000066, "Notes", V.Screen.F_ARItemNotes!txtBox.Text)
+	F.Intrinsic.Control.Else
+		'We modify the existing entry
+		F.Data.DataTable.SetValue("dtNotes", V.Screen.F_ARItemNotes!txtRow.Text.Long, "Notes", V.Screen.F_ARItemNotes!txtBox.Text)
+	F.Intrinsic.Control.EndIf
+	
+	'Clear out the info
+	F.Intrinsic.Control.CallSub(Clear)
+	
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Concat("Project: GCG_5470_ARCustomerNotes.g2u", V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.CallSub(Unload)
+F.Intrinsic.Control.Endtry
+Program.Sub.Save.End
+
+Program.Sub.Clear.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare(String, "")
+
+'We clear the textbox and set the invisible row textbox to New to signify that any note that they add right now is new
+Gui.F_ARItemNotes.txtBox.Text("")
+Gui.F_ARItemNotes.txtRow.Text("NEW")
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Concat("Project: GCG_5470_ARCustomerNotes.g2u", V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.CallSub(Unload)
+F.Intrinsic.Control.Endtry
+Program.Sub.Clear.End
+
+Program.Sub.Unload.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare(String, "")
+
+'Save the changes and exit the screen
+F.Intrinsic.Control.If(V.DataTable.dtNotes.Exists)
+	F.ODBC.Connection!conx.OpenCompanyConnection
+	F.Data.DataTable.SaveToDB("dtNotes", "conx", "GCG_5470_AR_CustNts", "NoteID", 7)
+	F.ODBC.Connection!conx.Close
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.End
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Concat("Project: GCG_5470_ARCustomerNotes.g2u", V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.End
+F.Intrinsic.Control.Endtry
+Program.Sub.Unload.End
+
+Program.Sub.ScreenPrep.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare(String, "")
+V.Local.sFilter.Declare(String, "")
+
+F.ODBC.Connection!conx.OpenCompanyConnection
+
+F.Data.DataTable.CreateFromSQL("dtNotes", "conx", "Select NoteID, CustNo, AddDate, Notes, UserNo from GCG_5470_AR_CustNts", True)
+
+F.ODBC.Connection!conx.Close
+
+F.Intrinsic.String.Build("[CustNo] = '{0}'", V.Passed.000066, V.Local.sFilter)
+F.Data.DataView.Create("dtNotes", "dvNotes", 22, V.Local.sFilter, "AddDate Asc")
+
+Gui.F_ARItemNotes.GsGCNotes.AddGridviewFromDataview("gridNotes", "dtNotes", "dvNotes")
+
+Gui.F_ARItemNotes.GsGCNotes.SetColumnProperty("gridNotes", "NoteID", "Visible", False)
+Gui.F_ARItemNotes.GsGCNotes.SetColumnProperty("gridNotes", "CustNo", "Visible", False)
+
+Gui.F_ARItemNotes.GsGCNotes.SetColumnProperty("gridNotes", "AddDate", "AllowEdit", False)
+Gui.F_ARItemNotes.GsGCNotes.SetColumnProperty("gridNotes", "Notes", "AllowEdit", False)
+Gui.F_ARItemNotes.GsGCNotes.SetColumnProperty("gridNotes", "UserNo", "AllowEdit", False)
+
+Gui.F_ARItemNotes.GsGCNotes.SetColumnProperty("gridNotes", "AddDate", "ReadOnly", False)
+Gui.F_ARItemNotes.GsGCNotes.SetColumnProperty("gridNotes", "Notes", "ReadOnly", False)
+Gui.F_ARItemNotes.GsGCNotes.SetColumnProperty("gridNotes", "UserNo", "ReadOnly", False)
+
+Gui.F_ARItemNotes.GsGCNotes.SetColumnProperty("gridNotes", "AddDate", "Width", 100)
+Gui.F_ARItemNotes.GsGCNotes.SetColumnProperty("gridNotes", "Notes", "Width", 1000)
+Gui.F_ARItemNotes.GsGCNotes.SetColumnProperty("gridNotes", "UserNo", "Width", 150)
+
+Gui.F_ARItemNotes.GsGCNotes.SetColumnProperty("gridNotes", "AddDate", "Caption", "Date")
+Gui.F_ARItemNotes.GsGCNotes.SetColumnProperty("gridNotes", "Notes", "Caption", "Notes")
+Gui.F_ARItemNotes.GsGCNotes.SetColumnProperty("gridNotes", "UserNo", "Caption", "User")
+
+Gui.F_ARItemNotes.GsGCNotes.SetColumnProperty("gridNotes", "AddDate", "VisibleIndex", 1)
+Gui.F_ARItemNotes.GsGCNotes.SetColumnProperty("gridNotes", "Notes", "VisibleIndex", 3)
+Gui.F_ARItemNotes.GsGCNotes.SetColumnProperty("gridNotes", "UserNo", "VisibleIndex", 2)
+
+Gui.F_ARItemNotes.GsGCNotes.SetColumnProperty("gridNotes", "AddDate", "DisplayCustomDatetime", "d")
+
+Gui.F_ARItemNotes.GsGCNotes.MainView("gridNotes")
+
+'I dont think we need to do anything with the date
+'Gui.F_ARItemNotes.dtpEntry.Value(V.Ambient.Date)
+
+Gui.F_ARItemNotes.txtRow.Text("NEW")
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Concat("Project: GCG_5470_ARCustomerNotes.g2u", V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.CallSub(Unload)
+F.Intrinsic.Control.Endtry
+Program.Sub.ScreenPrep.End
+
+Program.Sub.RowClick.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare(String, "")
+
+'If the user clicks on a row, we populate the notes textbox with the note on that row
+Gui.F_ARItemNotes.txtRow.Text(V.Args.RowIndex.Long)
+Gui.F_ARItemNotes.txtBox.Text(V.DataTable.dtNotes(V.Args.RowIndex.Long).Notes!FieldVal)
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Concat("Project: GCG_5470_ARCustomerNotes.g2u", V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.CallSub(Unload)
+F.Intrinsic.Control.Endtry
+Program.Sub.RowClick.End
